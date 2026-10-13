@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Long Video Downloader</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 500px; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 20px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; }
+        button:disabled { background-color: #cccccc; }
+        #message { margin-top: 20px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>YouTube Long Video Downloader</h2>
+        <p>Chrome Browser-Direct Downloader</p>
+        <input type="text" id="videoUrl" placeholder="Yahan YouTube Video ka Link Paste Karein...">
+        <button id="downloadBtn" onclick="startDownload()">Download Video</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        async function startDownload() {
+            const url = document.getElementById('videoUrl').value;
+            const btn = document.getElementById('downloadBtn');
+            const msg = document.getElementById('message');
+
+            if (!url) { alert('Please enter a URL'); return; }
+
+            btn.disabled = true;
+            btn.innerText = "Processing on Server... (Please Wait)";
+            msg.innerText = "Termux video extract kar raha hai, thoda samay lag sakta hai...";
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) throw new Error('Download failed on server');
+
+                // File stream ko blob me convert karna
+                const blob = await response.blob();
+                
+                // Content-Disposition se filename nikalna (agar available ho)
+                const urlObj = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlObj;
+                a.download = "youtube_video.mp4"; // Default name agar server se na mile
+                document.body.appendChild(a);
+                
+                // Chrome download trigger karein
+                a.click();
+                
+                a.remove();
+                window.URL.revokeObjectURL(urlObj);
+                msg.innerText = "Chrome me download shuru ho gaya hai!";
+            } catch (error) {
+                msg.innerText = "Download me dikkat aayi. Kripya URL check karein.";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Download Video";
+            }
+        }
+    </script>
+</body>
+</html>
+
